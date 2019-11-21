@@ -3,3 +3,6 @@ A golang web form that takes a message and tells you the probability that it is 
 
 reads a csv file and then has a web server listen for input.
 it gives a probablity that the input is spam.
+
+the data in spam.csv
+came from https://www.kaggle.com/uciml/sms-spam-collection-dataset
