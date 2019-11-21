@@ -14,12 +14,13 @@ import (
 )
 
 const (
-	Good bayesian.Class = "Good"
-	Bad  bayesian.Class = "Bad"
+	Good bayesian.Class = "ham"
+	Bad  bayesian.Class = "spam"
 )
 
 var globalClassifier *bayesian.Classifier
 
+// this reads the csv every time it starts
 // data from https://www.kaggle.com/uciml/sms-spam-collection-dataset
 
 func train(strings_bools map[string]bool) *bayesian.Classifier {
@@ -104,6 +105,8 @@ func loadFile(path string) (map[string]bool, error) {
 			//recordsOK[record] = true
 
 			var isok = false
+			// TODO there should be a better way to map "ham"/"spam"
+			// to the bayes class
 			if class == "ham" {
 				isok = true
 			}
@@ -131,23 +134,24 @@ func probBad(classifier *bayesian.Classifier, input string) float64 {
 
 	// scores[0] is good
 	// scores[1] is bad
-	probIsBad := scores[1] - scores[0]
+	probIsBad := scores[1] * 100
+	fmt.Println("probIsBad", probIsBad)
 
 	return probIsBad
 }
 
 func main() {
 	f := "spam.csv"
-	sms_ok, err := loadFile(f)
+	smsOk, err := loadFile(f)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("loaded ok")
 
-	fmt.Println("sms counts", len(sms_ok))
+	fmt.Println("sms counts", len(smsOk))
 
 	//*bayesian.Classifier
-	classifier := train(sms_ok)
+	classifier := train(smsOk)
 	globalClassifier = classifier
 	howManyTrained := classifier.Learned()
 	fmt.Println("training eamples", howManyTrained)
@@ -206,7 +210,7 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "<html><pre> \n")
 		fmt.Fprintf(w, "Name \t %s\n", html.EscapeString(name))
 		fmt.Fprintf(w, "message \t %s\n", html.EscapeString(message))
-		fmt.Fprintf(w, "probabilityIsBad \t %f\n", probIsBad)
+		fmt.Fprintf(w, "probabilityIsBad \t %f%% \n", probIsBad)
 		fmt.Fprintln(w, `<br><a href="/">back</a>`)
 	} else {
 		http.Error(w, "404 not found.", http.StatusNotFound)
